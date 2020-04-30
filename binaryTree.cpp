@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip> //buat setprecision doang di rata-rata langkah
 using namespace std;
 
 /*--------          BATANG TUBUH BINARY TREE          --------*/
@@ -49,6 +50,22 @@ struct Tree{
         }
     //-------- ./LEVEL BINARY TREE --------//
 
+    //-------- BANYAK NODE BINARY TREE --------//
+        template <class T>
+        int banyakNode(Tree<T>*tr){
+            if(tr == NULL){
+                return 0;
+            }
+
+            if(tr->kanan == NULL && tr->kiri == NULL){
+                return 1;
+            }
+            else{
+                return banyakNode(tr->kanan) + banyakNode(tr->kiri) + 1;
+            }
+        }
+    //-------- ./BANYAK NODE BINARY TREE --------//
+    
 /*--------          ./SERBA-SERBI BINARY TREE          --------*/
 
 
@@ -124,6 +141,49 @@ struct Tree{
         }
     //-------- ./RETURN NODE TERAKHIR --------//
 
+    //-------- RETURN JUMLAH LANGKAH PENCARIAN --------//
+        /*anggapan yang dicari ada*/
+        template <class T>
+        int searchLangkah(Tree<T>*tr, T x){
+            if(tr == NULL){
+                return -9999;
+            }
+
+            if(tr->data == x){
+                return 1;
+            }
+
+            int a = searchLangkah(tr->kanan,x) + 1;
+            int b = searchLangkah(tr->kiri,x) + 1;
+
+            return (a>b)?a: b;
+        }
+        /*mirip fungsi nyari level sih tapi versi rekursif wkwkwk...*/
+    //-------- ./RETURN JUMLAH LANGKAH PENCARIAN --------//
+
+    //-------- RETURN TOTAL LANGKAH PENCARIAN --------//
+        template <class T>
+        int totalLangkah(Tree<T>*tr, int langkah = 1){
+            if(tr == NULL){
+                return 0;
+            }
+            int a = totalLangkah(tr->kanan, langkah+1);
+            int b = totalLangkah(tr->kiri, langkah+1);
+
+            return langkah + a + b;
+        }
+    //-------- ./RETURN TOTAL LANGKAH PENCARIAN --------//
+
+    //-------- RETURN RATA-RATA LANGKAH PENCARIAN --------//
+        template <class T>
+        float rataLangkah(Tree<T>*tr){
+            float total = totalLangkah(tr);
+            float banyak = banyakNode(tr);
+
+            return total/banyak;
+        }
+    //-------- ./RETURN RATA-RATA LANGKAH PENCARIAN --------//
+
 /*--------          ./PENCARIAN BINARY TREE          --------*/
 
 
@@ -138,7 +198,7 @@ struct Tree{
 
             cout<<temp->data<<" ";
             preorder(temp->kiri);    
-            inorder(temp->kanan);
+            preorder(temp->kanan);
         }
     //-------- ./PREORDER TRAVERSAL --------//
 
@@ -167,6 +227,20 @@ struct Tree{
             cout<<temp->data<<" ";
         }
     //-------- ./POSTORDER TRAVERSAL --------//
+
+    //-------- KESELURUHAN LANGKAH PENCARIAN --------//
+        //trStart = trCheck ketika di fungsi main!
+        //ditampilin sama kayak preorder transversal
+        template <class T>
+        void tampilLangkah(Tree<T>*tr, int langkah = 1){
+            if(tr == NULL){
+                return;
+            }
+            cout<<tr->data<<" = "<<langkah<<" langkah"<<endl;
+            tampilLangkah(tr->kiri, langkah+1);
+            tampilLangkah(tr->kanan, langkah+1);
+        }
+    //-------- ./KESELURUHAN LANGKAH PENCARIAN --------//
 
 /*--------          ./TAMPILKAN BINARY TREE          --------*/
 
@@ -198,6 +272,14 @@ struct Tree{
     //-------- INSERT BERDASARKAN KEY --------//
         template <class T>
         void insertOfKey(Tree<T>* tr, T key, T x){
+            /*
+            //periksa nilainya ada apa kaga, biar ga ngebug pas di fungsi insertOfKey
+            Tree<T> *check = searchNode(tr, x);
+            if(check !=NULL){
+                cout<<"Nilai sudah ada dalam binary tree!"<<endl;
+                return;
+            }
+            */
             Tree<T>* keyNode = searchNode(tr, key);
             if(keyNode == NULL){
                 cout<<"Key tidak ditemukan!"<<endl;
@@ -215,7 +297,42 @@ struct Tree{
         }
     //-------- ./INSERT BERDASARKAN KEY --------//
     
+    //-------- INSERT SESUAI PERBANDINGAN --------//
+        /*yang lebih gede dari pangkal taruh di sebelah kanan
+        yang lebih kecil dari pangkal taruh di sebelah kiri */
+        template <class T>
+        void insertBanding(Tree<T>* tr, T x){
+            /*
+            //periksa nilainya ada apa kaga, biar ga ngebug pas di fungsi insertOfKey
+            Tree<T> *check = searchNode(tr, x);
+            if(check !=NULL){
+                cout<<"Nilai sudah ada dalam binary tree!"<<endl;
+                return;
+            }*/
+
+            if(x < tr->data){
+                if(tr->kiri != NULL){
+                    insertBanding(tr->kiri, x);
+                }
+                else{
+                    tr->kiri = new Tree<T>(x);
+                    tr->kiri->pangkal = tr;
+                }
+            }
+            else{
+                if(tr->kanan != NULL){
+                    insertBanding(tr->kanan, x);
+                }
+                else{
+                    tr->kanan = new Tree<T>(x);
+                    tr->kanan->pangkal = tr;
+                }
+            }
+        }
+    //-------- ./INSERT SESUAI PERBANDINGAN --------//
+
 /*--------          ./TAMBAHKAN (INSERT) BINARY TREE          --------*/
+
 
 /*--------          HAPUS (DELETE) BINARY TREE          --------*/
 
@@ -270,18 +387,23 @@ struct Tree{
 /*--------          ./HAPUS (DELETE) BINARY TREE          --------*/
 
 int main(){
-    Tree<int> *a = new Tree<int>(0);
-    insertDefault(a, 1);
-    insertDefault(a, 2);
-    insertDefault(a,3);
-    insertDefault(a,4);
-    insertDefault(a,5);
-    insertDefault(a,6);
-    cout<<&a<<endl;
-    cout<<&a+1<<endl;
-    cout<<"Preorder: "; preorder(a); cout<<endl;
-    cout<<"Inorder: "; inorder(a); cout<<endl;
-    cout<<"Postorder: "; postorder(a); cout<<endl;
+    cout<<"Masukkan nilai pangkal: ";
+    int x; cin>>x;
+    Tree<int> *a = new Tree<int>(x);
+
+    cout<<"Masukkan banyak nilai: ";
+    int n; cin>>n;
+
+    while(n--){
+        int i; cin>>i;
+        insertBanding(a,i);
+    }
+
+    cout<<"Banyak Node: "<<banyakNode(a)<<endl;
+    //cout<<"Preorder: "; preorder(a); cout<<endl;
+    //cout<<"Inorder: "; inorder(a); cout<<endl;
+    //cout<<"Postorder: "; postorder(a); cout<<endl;
     cout<<"Tinggi BT: "<<tinggiBT(a)<<endl;
-    
+    tampilLangkah(a);
+    cout<<"Rata-Rata Langkah Pencarian: "<<setprecision(3)<<rataLangkah(a)<<endl;
 }
